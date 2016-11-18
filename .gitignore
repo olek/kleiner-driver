@@ -1,0 +1,14 @@
+/target
+/classes
+pom.xml
+pom.xml.asc
+*.jar
+*.class
+/.lein-*
+/.nrepl-port
+.idea
+.hgignore
+.hg/
+.DS_Store
+.env-vars
+profiles.clj
