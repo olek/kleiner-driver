@@ -1,13 +1,12 @@
-(ns driver.core)
-
-(ns postman.core
-  (:require [mount.core :as mount])
+(ns driver.core
+  (:require [driver.api :refer [enable-http-server]]
+            [mount.core :as mount])
   (:import (java.util.concurrent CountDownLatch)))
 
 (defn -main
   "Start whole shebang"
   [& args]
-    ;(enable-http-server)
+    (enable-http-server)
 
     (mount/start)
 

@@ -8,9 +8,9 @@
                  ; logging
                  [org.clojure/tools.logging "0.3.1"]
 
-                 [http-kit "2.1.19"]
-                 [cheshire "5.5.0" :exclusions [com.fasterxml.jackson.core/jackson-core]]
-                 [environ "1.0.2"] ]
+                 [http-kit "2.2.0"]
+                 [cheshire "5.6.3"]
+                 [environ "1.1.0"]]
 
   :plugins [[lein-environ "1.0.1"]
             [lein-var-file "0.3.1"]]
