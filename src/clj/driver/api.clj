@@ -1,17 +1,16 @@
 (ns driver.api
   (:require [cheshire.core :as json]
             [clojure.tools.logging :refer [info]]
+            [compojure.core :refer :all]
+            [compojure.route :as route]
             [environ.core :refer [env]]
             [mount.core :refer [defstate]]
             [org.httpkit.server :refer :all]))
 
-(defn status
-  "Returns map of status checks for all services"
-  [_]
-  (let []
-    {:status  200
-     :headers {"Content-Type" "text/html"}
-     :body    (json/generate-string {:foo       "BAR"})}))
+(defroutes app
+  (GET "/foo1" [] (json/generate-string {:foo1 "BAR"}))
+  (GET "/foo2" [] (json/generate-string {:foo2 "BAR"}))
+  (route/not-found (json/generate-string {:error "Not Found"})))
 
 (def ^:private http-server-enabled? (atom false))
 
@@ -22,7 +21,7 @@
     :start
     (when @http-server-enabled?
       (info "Starting kleiner-driver api" {:port 8080})
-      (run-server status {:port 8080}))
+      (run-server app {:port 8080}))
     :stop
     (when @http-server-enabled?
       (server :timeout 100)))

@@ -10,6 +10,7 @@
 
                  [http-kit "2.2.0"]
                  [cheshire "5.6.3"]
+                 [compojure "1.5.1"]
                  [environ "1.1.0"]]
 
   :plugins [[lein-environ "1.0.1"]
