@@ -1,7 +1,12 @@
 (ns driver.core
-  (:require [driver.api :refer [enable-http-server]]
+  (:require [clojure.core.async :refer [chan]]
+            [driver.api :refer [enable-http-server]]
+            [driver.generator :refer [start-generator]]
             [mount.core :as mount])
   (:import (java.util.concurrent CountDownLatch)))
+
+(defn- start-everything []
+  (start-generator (chan 10)))
 
 (defn -main
   "Start whole shebang"
@@ -10,6 +15,6 @@
 
     (mount/start)
 
-    ;(start-everything)
+    (start-everything)
 
     (.await (CountDownLatch. 1)))
