@@ -5,16 +5,21 @@
             [mount.core :refer [defstate]]))
 
 (defn- transmit [data thread-num]
-  (info "Transmitting sample case in thread" thread-num data))
+  (info "Transmitting sample case in thread" thread-num data)
+  (Thread/sleep 10000))
 
 (defstate ^:private transmitter
   :start
-  (let [generated-cases-chan (:generated-cases channels)]
+  (let [generated-cases-chan (:generated-cases channels)
+        quit-atom (atom false)]
     (info "Waiting for the sample cases")
     (doseq [n (range 10)]
       (thread
         (loop []
-          (let [data (<!! generated-cases-chan)]
-            (when data
+          (when-not @quit-atom
+            (when-let [data (<!! generated-cases-chan)]
               (transmit data n)
-              (recur))))))))
+              (recur))))))
+    quit-atom)
+  :stop
+  (reset! transmitter true))
