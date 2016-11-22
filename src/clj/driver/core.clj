@@ -3,6 +3,7 @@
             [driver.api :refer [enable-http-server]]
             [driver.generator :as generator-for-mount]
             [driver.transmitter :as transmitter-for-mount]
+            [driver.processor :as processor-for-mount]
             [mount.core :as mount])
   (:import (java.util.concurrent CountDownLatch)))
 
