@@ -7,6 +7,10 @@
   (atom {"org-123" {:sent-cases-count 0
                     :predictions-count 0}}))
 
+;; temporary function
+(defn stats []
+  @store)
+
 (defn inc-sent-cases-count [org-id]
   (swap! store
          update-in
