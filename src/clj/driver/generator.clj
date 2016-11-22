@@ -10,7 +10,7 @@
     (let [generated-cases-chan (:generated-cases channels)
           data {:org-id 123 :id 123 :description "foo"}]
       (loop []
-        (info "Generating sample case 22222")
+        (info "Generating sample case")
         (let [sent (>!! generated-cases-chan data)]
           (when sent
             (Thread/sleep 100)
