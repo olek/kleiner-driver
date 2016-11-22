@@ -13,5 +13,5 @@
         (info "Generating sample case")
         (let [sent (>!! generated-cases-chan data)]
           (when sent
-            (Thread/sleep 100)
+            (Thread/sleep 1000)
             (recur)))))))
