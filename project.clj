@@ -7,6 +7,7 @@
 
                  ; logging
                  [org.clojure/tools.logging "0.3.1"]
+                 [ch.qos.logback/logback-classic "1.1.7"]
 
                  [http-kit "2.2.0"]
                  [cheshire "5.6.3"]
