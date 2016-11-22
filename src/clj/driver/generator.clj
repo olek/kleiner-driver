@@ -4,15 +4,14 @@
             [driver.channels :refer [channels]]
             [mount.core :refer [defstate]]))
 
-(def ^:private quit-generator? (atom false))
-
 (defstate ^:private generator
   :start
   (thread
-    (while (not @quit-generator?)
-      (info "Generating sample case")
-      (>!! (:generated-cases channels) {:org-id 123 :id 123 :description "foo"})
-      (Thread/sleep 1000)))
-
-  :stop
-  (reset! quit-generator? true))
+    (let [generated-cases-chan (:generated-cases channels)
+          data {:org-id 123 :id 123 :description "foo"}]
+      (loop []
+        (info "Generating sample case 22222")
+        (let [sent (>!! generated-cases-chan data)]
+          (when sent
+            (Thread/sleep 100)
+            (recur)))))))
