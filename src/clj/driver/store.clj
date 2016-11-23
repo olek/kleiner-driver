@@ -39,6 +39,8 @@
 
 (defn set-target-rate [rate org-id]
   (assert-org-id org-id)
+  (assert (not (neg? rate)))
+  (assert (<= rate 100))
   (swap! store
          update-in
          [org-id :target-rate]
