@@ -4,8 +4,9 @@
 
 (defstate ^:private store
   :start
-  (atom {"org-123" {:sent-cases-count 0
-                    :predictions-count 0}}))
+  (atom {123 {:sent-cases-count 0
+              :predictions-count 0
+              :target-rate 0}}))
 
 ;; temporary function
 (defn stats []
@@ -14,11 +15,20 @@
 (defn inc-sent-cases-count [org-id]
   (swap! store
          update-in
-         [(str "org-" org-id) :sent-cases-count]
+         [org-id :sent-cases-count]
          inc))
 
 (defn inc-predictions-count [org-id]
   (swap! store
          update-in
-         [(str "org-" org-id) :predictions-count]
+         [org-id :predictions-count]
          inc))
+
+(defn target-rate [org-id]
+  (get-in @store [org-id :target-rate] 0))
+
+(defn set-target-rate [rate org-id]
+  (swap! store
+         update-in
+         [org-id :target-rate]
+         (constantly rate)))
