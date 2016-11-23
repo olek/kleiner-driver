@@ -22,7 +22,7 @@
   :java-source-paths ["src/java"]
   :jvm-opts ["-Duser.timezone=UTC"]
              ;"-Djavax.net.debug=ssl" ;good to enable when debugging ssl issues
-  :repl-options {:init-ns dev}
+  :repl-options {:timeout 60000}
 
   :profiles {:test {:env {:foo "BAR"}
                     :dependencies [[org.clojure/tools.namespace "0.2.11"]]}
