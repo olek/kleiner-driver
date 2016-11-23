@@ -6,7 +6,7 @@
   :start
   (atom {123 {:sent-cases-count 0
               :predictions-count 0
-              :target-rate 0}}))
+              :target-rate 0}})) ; target-rate is cases per second to generate
 
 ;; temporary function
 (defn stats []
