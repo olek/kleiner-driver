@@ -6,7 +6,7 @@
 
 (defn- transmit [data thread-num]
   (info "Transmitting sample case in thread" thread-num data)
-  (Thread/sleep 10000)
+  (Thread/sleep 10)
   [data 42])
 
 (defn- transmit-start-event [data ch]
