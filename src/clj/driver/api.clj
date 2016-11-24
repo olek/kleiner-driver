@@ -11,6 +11,9 @@
             [ring.middleware.params :refer [wrap-params]]))
 
 (defroutes routes
+  (POST "/prediction-stub" []
+    (Thread/sleep 100); prediction analysis is supposed to take around 100ms
+    (json/generate-string {:prediction 42}))
   (GET "/stats" [] (json/generate-string (store/stats)))
   (POST "/set-target-rate" [rate :<< as-int org-id :<< as-int]
     (store/set-target-rate rate org-id)
