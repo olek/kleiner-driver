@@ -28,7 +28,8 @@
 
 ;; temporary function
 (defn stats []
-  @store)
+  (let [avg (average :sent-cases 123)]
+    (update-in @store [123 :sent-cases] #(merge % {:avg avg}))))
 
 (defn- average [key-name org-id]
   (let [curr-time (quot (System/currentTimeMillis) 1000)
