@@ -1,13 +1,12 @@
 (ns driver.transmitter
   (:require [cheshire.core :as json]
+            [clojure.core.async :refer [<!! >!! thread]]
             [clojure.tools.logging :refer [info]]
-            [clojure.core.async :refer [thread <!! >!!]]
             [driver.channels :refer [channels]]
             [mount.core :refer [defstate]]
             [org.httpkit.client :as http])
-  (:import (com.fasterxml.jackson.core JsonParseException)
-           (org.httpkit.client TimeoutException))
-  )
+  (:import com.fasterxml.jackson.core.JsonParseException
+           org.httpkit.client.TimeoutException))
 
 (def ^:private timeout 3000) ; in ms
 
@@ -40,16 +39,9 @@
                        (Integer. prediction)
                        (catch NumberFormatException e nil)))
         prediction (cond
-                     (some? error)
-                     (if (instance? TimeoutException error)
-                       :timeout
-                       :error)
-
-                     (nil? prediction)
-                     :error
-
-                     :else
-                     prediction)]
+                     (and (nil? error) (number? prediction)) prediction
+                     (instance? TimeoutException error) :timeout
+                     :else :error)]
     [data prediction]))
 
 (defn- transmit-start-event [data ch]
