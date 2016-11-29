@@ -11,7 +11,10 @@
     (store/inc-sent-cases-count org-id)
 
     :finish
-    (store/inc-predictions-count org-id)))
+    (case prediction
+      :error (store/inc-errors-count org-id)
+      :timeout (store/inc-timeouts-count org-id)
+      (store/inc-predictions-count org-id))))
 
 (defstate ^:private processor
   :start
