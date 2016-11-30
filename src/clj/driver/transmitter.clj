@@ -37,7 +37,7 @@
                :timeout timeout}))
 
 (defn- transmit [data thread-id]
-  (info "Transmitting sample case " (:id data) "for org" (:org-id data) " in thread" thread-id data)
+  (info "Transmitting sample case " (:case data) "for org" (:org data) " in thread" thread-id data)
   (let [response (transmit-raw data)
         error (:error response)
         prediction (when-not error
@@ -45,7 +45,7 @@
                        (-> response
                            :body
                            json/parse-string
-                           (get "prediction"))
+                           (get "score"))
                        (catch JsonParseException e nil)))
         prediction (when prediction
                      (try

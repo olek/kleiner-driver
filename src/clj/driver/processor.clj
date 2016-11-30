@@ -5,7 +5,7 @@
             [driver.store :as store]
             [mount.core :refer [defstate]]))
 
-(defn- process [[event-type {:keys [org-id]} prediction]]
+(defn- process [[event-type {org-id :org} prediction]]
   (case event-type
     :start
     (store/inc-sent-cases-count org-id)

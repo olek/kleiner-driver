@@ -108,4 +108,5 @@
      (set-target-rate rate id))
    (future (Thread/sleep (* duration 1000))
            (doseq [id (org-ids)]
-             (set-target-rate 0 id)))))
+             (set-target-rate 0 id)))
+   [duration rate]))

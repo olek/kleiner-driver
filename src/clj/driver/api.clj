@@ -13,10 +13,10 @@
 (defroutes routes
   (POST "/prediction-stub" []
     (Thread/sleep 100); prediction analysis is supposed to take around 100ms
-    (json/generate-string {:prediction 42}))
+    (json/generate-string {:score 42}))
   (GET "/stats" [] (json/generate-string (store/stats)))
-  (POST "/set-target-rate" [rate :<< as-int org-id :<< as-int]
-    (store/set-target-rate rate org-id)
+  (POST "/set-target-rate" [rate :<< as-int org :<< as-int]
+    (store/set-target-rate rate org)
     {:status 204})
   (POST "/pulse" [duration :<< as-int rate :<< as-int]
     (store/pulse duration rate)
