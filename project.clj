@@ -1,4 +1,4 @@
-(defproject kleiner-driver "0.1.0-SNAPSHOT"
+(defproject kleiner-driver "0.1.0"
   :description "Backend to generate fake cases and send them to router, along with API to control it."
   :url "http://example.com/FIXME"
   :main driver.core
@@ -26,5 +26,4 @@
 
   :profiles {:test {:env {:foo "BAR"}
                     :dependencies [[org.clojure/tools.namespace "0.2.11"]]}
-             :uberjar {:uberjar-name "driver"
-                       :aot [driver.core]}})
+             :uberjar {:aot [driver.core]}})

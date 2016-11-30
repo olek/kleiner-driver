@@ -5,7 +5,8 @@
             [driver.transmitter :as transmitter-for-mount]
             [driver.processor :as processor-for-mount]
             [mount.core :as mount])
-  (:import (java.util.concurrent CountDownLatch)))
+  (:import (java.util.concurrent CountDownLatch))
+  (:gen-class))
 
 (defn -main
   "Start whole shebang"

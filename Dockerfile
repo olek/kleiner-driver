@@ -1,4 +1,4 @@
-FROM desk/lein # FIXME change to some publicly available image with java/lein
+FROM debian:jessie
 
 ENV LANG C.UTF-8
 
@@ -7,7 +7,7 @@ ENV LANG C.UTF-8
 ##########
 # Packages
 
-RUN apt-get update && apt-get install \
+RUN apt-get --assume-yes update && apt-get --assume-yes install \
   # Makes /etc/ssl/certs/java/cacerts available for the java8 install uses less stringent cacerts
   default-jre-headless \
   # to fetch jce_policy
@@ -31,7 +31,7 @@ RUN \
     echo "===> install Java"  && \
     echo debconf shared/accepted-oracle-license-v1-1 select true | debconf-set-selections  && \
     echo debconf shared/accepted-oracle-license-v1-1 seen true | debconf-set-selections  && \
-    DEBIAN_FRONTEND=noninteractive  apt-get install --force-yes oracle-java8-installer oracle-java8-set-default  && \
+    DEBIAN_FRONTEND=noninteractive  apt-get --assume-yes install oracle-java8-installer oracle-java8-set-default  && \
     \
     \
     echo "===> clean up..."  && \
@@ -45,7 +45,7 @@ ENV JAVA_HOME /usr/lib/jvm/java-8-oracle
 
 ENV LEIN_ROOT true
 
-ENV LEIN_VERSION 2.5.1
+ENV LEIN_VERSION 2.7.1
 
 RUN wget -q -O /usr/bin/lein \
     https://raw.githubusercontent.com/technomancy/leiningen/${LEIN_VERSION}/bin/lein \
@@ -60,4 +60,4 @@ RUN lein uberjar
 
 ENTRYPOINT ["./entrypoint.sh"]
 
-CMD ["-c", "/", "-p", "8080"]
+#CMD ["-c", "/", "-p", "8080"]
