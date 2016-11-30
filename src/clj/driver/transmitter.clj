@@ -3,6 +3,7 @@
             [clojure.core.async :refer [<!! >!! thread]]
             [clojure.tools.logging :refer [info]]
             [driver.channels :refer [channels]]
+            [environ.core :refer [env]]
             [mount.core :refer [defstate]]
             [org.httpkit.client :as http])
   (:import com.fasterxml.jackson.core.JsonParseException
@@ -10,11 +11,17 @@
 
 (def ^:private timeout 3000) ; in ms
 
-;; TODO those 4 should go to env
-(def ^:private method "http")
-(def ^:private host "localhost")
-(def ^:private port 8080)
-(def ^:private path "/prediction-stub")
+(def ^:private method (or (:target-http-method env)
+                          "http"))
+(def ^:private host (or (:target-host env)
+                        "localhost"))
+(def ^:private port (or (:target-port env)
+                        "8080"))
+(def ^:private path (or (:target-path env)
+                        "/prediction-stub"))
+
+(def ^:private threadpool-size (Integer. (or (:threadpool-size env)
+                                             "10")))
 
 ;; BTW - by default, http-kit keeps idle connections for 120s
 
@@ -58,7 +65,7 @@
         stats-chan (:stats channels)
         quit-atom (atom false)]
     (info "Waiting for the sample cases")
-    (doseq [n (range 10)]
+    (doseq [n (range threadpool-size)]
       (thread
         (loop []
           (when-not @quit-atom
