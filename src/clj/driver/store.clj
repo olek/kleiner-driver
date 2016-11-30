@@ -2,10 +2,7 @@
   (:require [clojure.tools.logging :refer [info]]
             [mount.core :refer [defstate]]))
 
-(def window-size 10) ; secs
-
-{:finish [10000 10001 10002 1003]
- :error  [954 967 1004]}
+(def ^:private window-size 10) ; secs
 
 (def ^:private defaults
   {123 {:sent-cases {:timeseries (list)
@@ -26,7 +23,6 @@
   (assert (contains? @store org-id)
           (str "Org " org-id " is not in the store.")))
 
-;; not really a core 'store' operation, but is operation ON store
 (defn- average [key-name org-id]
   (let [curr-time (quot (System/currentTimeMillis) 1000)
         window-end (- curr-time window-size)]
@@ -38,6 +34,25 @@
         count
         (/ window-size))))
 
+(defn- update-timeseries [timeseries]
+  (let [curr-time (quot (System/currentTimeMillis) 1000)
+        window-end (- curr-time window-size)]
+    (->> curr-time
+         list
+         (concat timeseries)
+         (drop-while (partial > window-end)))))
+
+(defn- inc-count [key-name org-id]
+  (assert-org-id org-id)
+  (swap! store
+         update-in
+         [org-id key-name :count]
+         inc)
+  (swap! store
+         update-in
+         [org-id key-name :timeseries]
+         update-timeseries))
+
 (defn stats []
   (into {}
         (for [[org-id org-data] @store]
@@ -48,25 +63,6 @@
                                           :timeseries))
                              org-data
                              [:sent-cases :predictions :errors :timeouts])])))
-
-(defn- update-timeseries [timeseries]
-  (let [curr-time (quot (System/currentTimeMillis) 1000)
-        window-end (- curr-time window-size)]
-    (->> curr-time
-         list
-         (concat timeseries)
-         (drop-while (partial > window-end)))))
-
-(defn inc-count [key-name org-id]
-  (assert-org-id org-id)
-  (swap! store
-         update-in
-         [org-id key-name :count]
-         inc)
-  (swap! store
-         update-in
-         [org-id key-name :timeseries]
-         update-timeseries))
 
 (defn inc-sent-cases-count [org-id]
   (inc-count :sent-cases org-id))
