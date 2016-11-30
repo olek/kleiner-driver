@@ -26,11 +26,7 @@
   (assert (contains? @store org-id)
           (str "Org " org-id " is not in the store.")))
 
-;; temporary function
-(defn stats []
-  (let [avg (average :sent-cases 123)]
-    (update-in @store [123 :sent-cases] #(merge % {:avg avg}))))
-
+;; not really a core 'store' operation, but is operation ON store
 (defn- average [key-name org-id]
   (let [curr-time (quot (System/currentTimeMillis) 1000)
         window-end (- curr-time window-size)]
@@ -41,6 +37,17 @@
     (-> (get-in @store [org-id key-name :timeseries])
         count
         (/ window-size))))
+
+(defn stats []
+  (into {}
+        (for [[org-id org-data] @store]
+             [org-id (reduce (fn [acc n]
+                               (update-in acc
+                                          [n]
+                                          (comp (partial merge {:rate (average n org-id)}) dissoc)
+                                          :timeseries))
+                             org-data
+                             [:sent-cases :predictions :errors :timeouts])])))
 
 (defn- update-timeseries [timeseries]
   (let [curr-time (quot (System/currentTimeMillis) 1000)
