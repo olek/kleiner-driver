@@ -4,16 +4,21 @@
 
 (def ^:private window-size 10) ; secs
 
-(def ^:private defaults
-  {123 {:sent-cases {:timeseries (list)
-                     :count 0}
-        :predictions {:timeseries (list)
-                      :count 0}
-        :errors {:timeseries (list)
+(def ^:private org-defaults
+  {:sent-cases {:timeseries (list)
+                :count 0}
+   :predictions {:timeseries (list)
                  :count 0}
-        :timeouts {:timeseries (list)
-                   :count 0}
-        :target-rate 0}}) ; target-rate is cases per second to generate
+   :errors {:timeseries (list)
+            :count 0}
+   :timeouts {:timeseries (list)
+              :count 0}
+   :target-rate 0}) ; target-rate is cases per second to generate
+
+(def ^:private defaults
+  {101 org-defaults
+   102 org-defaults
+   103 org-defaults})
 
 (defstate ^:private store
   :start
