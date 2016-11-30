@@ -1,5 +1,5 @@
 (ns driver.generator
-  (:require [clojure.tools.logging :refer [info]]
+  (:require [clojure.tools.logging :refer [debug]]
             [clojure.core.async :refer [thread >!!]]
             [driver.channels :refer [channels]]
             [driver.store :as store]
@@ -25,7 +25,7 @@
                                  (map #(>!! generated-cases-chan (data %)))
                                  (every? true?))]
               (when (not (zero? cases-to-gen))
-                (info "Generated" cases-to-gen "sample case(s) for org " org-id ", will sleep for" sleep-time "ms"))
+                (debug "Generated" cases-to-gen "sample case(s) for org " org-id ", will sleep for" sleep-time "ms"))
               (when all-sent?
                 (Thread/sleep sleep-time)
                 (recur (+ i cases-to-gen))))))))))

@@ -1,5 +1,5 @@
 (ns driver.processor
-  (:require [clojure.tools.logging :refer [info]]
+  (:require [clojure.tools.logging :refer [debug]]
             [clojure.core.async :refer [go-loop <!]]
             [driver.channels :refer [channels]]
             [driver.store :as store]
@@ -20,11 +20,10 @@
   :start
   (let [stats-chan (:stats channels)
         quit-atom (atom false)]
-    (info "Waiting for stats")
     (go-loop []
       (when-not @quit-atom
         (when-let [stats-data (<! stats-chan)]
-          (info "Received stats" stats-data)
+          (debug "Received stats" stats-data)
           (process stats-data)
           (recur))))
     quit-atom)

@@ -23,6 +23,12 @@
 (def ^:private threadpool-size (Integer. (or (:threadpool-size env)
                                              "10")))
 
+(info "Environment" {:threadpool-size threadpool-size
+                     :target-http-method method
+                     :target-host host
+                     :target-port port
+                     :target-path path})
+
 ;; BTW - by default, http-kit keeps idle connections for 120s
 
 (defn- transmit-raw [data]
@@ -64,7 +70,6 @@
   (let [generated-cases-chan (:generated-cases channels)
         stats-chan (:stats channels)
         quit-atom (atom false)]
-    (info "Waiting for the sample cases")
     (doseq [n (range threadpool-size)]
       (thread
         (loop []
