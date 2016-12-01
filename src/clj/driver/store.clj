@@ -2,7 +2,8 @@
   (:require [clojure.tools.logging :refer [info]]
             [mount.core :refer [defstate]]))
 
-(def ^:private window-size 10) ; secs
+(def ^:private window-size 3) ; secs
+(def ^:private max-target-rate 10000)
 
 (def ^:private org-defaults
   {:sent-cases {:timeseries (list)
@@ -32,7 +33,8 @@
     (swap! store
            update-in
            [org-id key-name :timeseries]
-           (partial drop-while (partial > window-end)))
+           (comp doall
+                 (partial drop-while (partial > window-end))))
     (-> (get-in @store [org-id key-name :timeseries])
         count
         (/ window-size))))
@@ -43,7 +45,8 @@
     (->> curr-time
          list
          (concat timeseries)
-         (drop-while (partial > window-end)))))
+         (drop-while (partial > window-end))
+         doall)))
 
 (defn- inc-count [key-name org-id]
   (assert-org-id org-id)
@@ -86,7 +89,7 @@
 (defn set-target-rate [rate org-id]
   (assert-org-id org-id)
   (assert (not (neg? rate)))
-  (assert (<= rate 100))
+  (assert (<= rate max-target-rate))
   (swap! store
          update-in
          [org-id :target-rate]
