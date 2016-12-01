@@ -34,7 +34,9 @@
 (defn- transmit-raw [data]
   @(http/post (str method "://" host ":" port path)
               {:body (json/generate-string data)
-               :timeout timeout}))
+               :timeout timeout
+               :headers {"Content-Type" "application/json"
+                         "Accept" "application/json"}}))
 
 (defn- transmit [data thread-id]
   (info "Transmitting sample case " (:case data) "for org" (:org data) " in thread" thread-id data)
@@ -47,10 +49,6 @@
                            json/parse-string
                            (get "score"))
                        (catch JsonParseException e nil)))
-        prediction (when prediction
-                     (try
-                       (Integer. prediction)
-                       (catch NumberFormatException e nil)))
         prediction (cond
                      (and (nil? error) (number? prediction)) prediction
                      (instance? TimeoutException error) :timeout

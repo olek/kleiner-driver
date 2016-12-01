@@ -5,9 +5,9 @@
         </encoder>
     </appender>
 
-    <logger name="driver" level="TRACE"/>
+    <logger name="driver" level="INFO"/>
 
-    <root level="DEBUG">
+    <root level="INFO">
         <appender-ref ref="console"/>
     </root>
 
