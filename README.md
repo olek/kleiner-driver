@@ -37,11 +37,11 @@ Run it with docker
 
 ## Sample generated request
 
-    {"org": 123, "body": "foo", "case": 1, "prediction_type": "foo"}
+    {"org": 1, "text": "foo", "case": 123, "prediction_type": "sentiment"}
 
 ## Sample of expected response
 
-    {"score": 123}
+    {"score": 123.0}
 
 
 ## Sample Requests
@@ -49,23 +49,9 @@ Local server runs on port 8080, docker dev script is configured to map to local 
 ```
 $ curl -s 'http://olek.desk.local:8080/stats' | underscore print
 {
-  "101": {
+  "1": {
     "sent-cases": { "rate": 3.7, "count": 43 },
     "predictions": { "rate": 3.6, "count": 42 },
-    "errors": { "rate": 0, "count": 0 },
-    "timeouts": { "rate": 0, "count": 0 },
-    "target-rate": 10
-  },
-  "102": {
-    "sent-cases": { "rate": 3.7, "count": 43 },
-    "predictions": { "rate": 3.6, "count": 42 },
-    "errors": { "rate": 0, "count": 0 },
-    "timeouts": { "rate": 0, "count": 0 },
-    "target-rate": 10
-  },
-  "103": {
-    "sent-cases": { "rate": 3.8, "count": 44 },
-    "predictions": { "rate": 3.7, "count": 43 },
     "errors": { "rate": 0, "count": 0 },
     "timeouts": { "rate": 0, "count": 0 },
     "target-rate": 10
@@ -82,7 +68,7 @@ $ curl -v 'http://olek.desk.local:8080/reset' -X POST
 < HTTP/1.1 204 No Content
 ...
 
-$ curl -v 'http://olek.desk.local:8080/set-target-rate' -d org=102 -d rate=0
+$ curl -v 'http://olek.desk.local:8080/set-target-rate' -d org=1 -d rate=0
 ...
 < HTTP/1.1 204 No Content
 ...

@@ -16,9 +16,7 @@
    :target-rate 0}) ; target-rate is cases per second to generate
 
 (def ^:private defaults
-  {101 org-defaults
-   102 org-defaults
-   103 org-defaults})
+  {1 org-defaults})
 
 (defstate ^:private store
   :start

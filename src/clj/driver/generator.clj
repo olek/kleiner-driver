@@ -17,7 +17,7 @@
       (let [generated-cases-chan (:generated-cases channels)]
         (loop [i 0]
           (when-not @quit-atom
-            (let [data (fn [n] {:org org-id :body "foo" :case n :prediction_type "foo"})
+            (let [data (fn [n] {:org org-id :text "foo" :case n :prediction_type "sentiment"})
                   [sleep-time cases-to-gen] (sleep-time-and-cases-to-gen org-id)
                   all-sent? (->> cases-to-gen
                                  (+ i)
