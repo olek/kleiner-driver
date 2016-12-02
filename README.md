@@ -47,7 +47,7 @@ Run it with docker
 ## Sample Requests
 Local server runs on port 8080, docker dev script is configured to map to local port 8080 as well.
 ```
-$ curl -s 'http://olek.desk.local:8080/stats' | underscore print
+$ curl -s 'http://localhost:8080/stats' | underscore print
 {
   "1": {
     "sent-cases": { "rate": 3.7, "count": 43 },
@@ -58,22 +58,33 @@ $ curl -s 'http://olek.desk.local:8080/stats' | underscore print
   }
 }
 
-$ curl -v 'http://olek.desk.local:8080/pulse' -d rate=1 -d duration=2
+$ curl -s 'http://localhost:8080/recent' | underscore print
+{
+  "1": [
+    [{ "org": 1, "text": "foo", "case": 1774312, "prediction_type": "sentiment" }, 42],
+    [{ "org": 1, "text": "foo", "case": 1773608, "prediction_type": "sentiment" }, 42],
+    [{ "org": 1, "text": "foo", "case": 1773864, "prediction_type": "sentiment" }, 42],
+    [{ "org": 1, "text": "foo", "case": 1774536, "prediction_type": "sentiment" }, 42],
+    [{ "org": 1, "text": "foo", "case": 1774859, "prediction_type": "sentiment" }, 42]
+  ]
+}
+
+$ curl -v 'http://localhost:8080/pulse' -d rate=1 -d duration=2
 ...
 < HTTP/1.1 204 No Content
 ...
 
-$ curl -v 'http://olek.desk.local:8080/reset' -X POST
+$ curl -v 'http://localhost:8080/reset' -X POST
 ...
 < HTTP/1.1 204 No Content
 ...
 
-$ curl -v 'http://olek.desk.local:8080/set-target-rate' -d org=1 -d rate=0
+$ curl -v 'http://localhost:8080/set-target-rate' -d org=1 -d rate=0
 ...
 < HTTP/1.1 204 No Content
 ...
 
-$ curl -v 'http://olek.desk.local:8080/set-target-rate-percentage' -d org=1 -d rate=0
+$ curl -v 'http://localhost:8080/set-target-rate-percentage' -d org=1 -d rate=0
 ...
 < HTTP/1.1 204 No Content
 ...

@@ -8,11 +8,13 @@
 (def ^:private max-target-rate 100000)
 (def ^:private hundred-percent-target-rate 1000)
 (def ^:private timeseries-buffer (ring-buffer (* window-size max-target-rate)))
+(def ^:private recent-buffer (ring-buffer 5))
 
 (def ^:private org-defaults
   {:sent-cases {:timeseries timeseries-buffer
                 :count 0}
    :predictions {:timeseries timeseries-buffer
+                 :recent recent-buffer
                  :count 0}
    :errors {:timeseries timeseries-buffer
             :count 0}
@@ -35,7 +37,6 @@
   (let [curr-time (quot (System/currentTimeMillis) 1000)
         window-end (- curr-time window-size)]
     (-> (get-in @store [org-id key-name :timeseries])
-        reverse
         (->> (drop-while (partial > window-end)))
         count
         (/ window-size))))
@@ -43,7 +44,7 @@
 (defn- update-timeseries [timeseries]
   (let [curr-time (quot (System/currentTimeMillis) 1000)
         window-end (- curr-time window-size)]
-    (cons curr-time timeseries)))
+    (conj timeseries curr-time)))
 
 (defn- inc-count [key-name org-id]
   (assert-org-id org-id)
@@ -63,21 +64,33 @@
                                (update-in acc
                                           [n]
                                           (comp (partial merge {:rate (average n org-id)}) dissoc)
-                                          :timeseries))
+                                          :timeseries
+                                          :recent))
                              org-data
                              [:sent-cases :predictions :errors :timeouts])])))
 
 (defn inc-sent-cases-count [org-id]
   (inc-count :sent-cases org-id))
 
-(defn inc-predictions-count [org-id]
-  (inc-count :predictions org-id))
+(defn inc-predictions-count [{org-id :org :as case-data} prediction]
+  (inc-count :predictions org-id)
+  (swap! store
+         update-in
+         [org-id :predictions :recent]
+         conj
+         [case-data prediction]))
 
 (defn inc-errors-count [org-id]
   (inc-count :errors org-id))
 
 (defn inc-timeouts-count [org-id]
   (inc-count :timeouts org-id))
+
+(defn recent-responses []
+  (into {}
+        (for [[org-id org-data] @store]
+             [org-id (into []
+                           (get-in org-data [:predictions :recent]))])))
 
 (defn target-rate [org-id]
   (assert-org-id org-id)
@@ -108,7 +121,6 @@
 (defn reset []
   (reset! store defaults))
 
-;; convenience method for REPL, not for production use
 (defn pulse
   ([] (pulse 3 1))
   ([duration rate]

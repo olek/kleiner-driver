@@ -15,6 +15,7 @@
     ;;(Thread/sleep 100); prediction analysis is supposed to take around 100ms
     (json/generate-string {:score 42}))
   (GET "/stats" [] (json/generate-string (store/stats)))
+  (GET "/recent" [] (json/generate-string (store/recent-responses)))
   (POST "/set-target-rate" [rate :<< as-int org :<< as-int]
     (store/set-target-rate rate org)
     {:status 204})

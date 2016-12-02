@@ -5,7 +5,7 @@
             [driver.store :as store]
             [mount.core :refer [defstate]]))
 
-(defn- process [[event-type {org-id :org} prediction]]
+(defn- process [[event-type {org-id :org :as case-data} prediction]]
   (case event-type
     :start
     (store/inc-sent-cases-count org-id)
@@ -14,7 +14,7 @@
     (case prediction
       :error (store/inc-errors-count org-id)
       :timeout (store/inc-timeouts-count org-id)
-      (store/inc-predictions-count org-id))))
+      (store/inc-predictions-count case-data prediction))))
 
 (defstate ^:private processor
   :start
