@@ -60,14 +60,17 @@
 (defn stats []
   (into {}
         (for [[org-id org-data] @store]
-             [org-id (reduce (fn [acc n]
-                               (update-in acc
-                                          [n]
-                                          (comp (partial merge {:rate (average n org-id)}) dissoc)
-                                          :timeseries
-                                          :recent))
-                             org-data
-                             [:sent-cases :predictions :errors :timeouts])])))
+          [org-id (conj (reduce (fn [acc n]
+                                  (update-in acc
+                                             [n]
+                                             (comp (partial merge {:rate (average n org-id)}) dissoc)
+                                             :timeseries
+                                             :recent))
+                                org-data
+                                [:sent-cases :predictions :errors :timeouts])
+                        [:target-rate-percentage (-> (get-in @store [org-id :target-rate])
+                                                     (/ hundred-percent-target-rate)
+                                                     (* 100))])])))
 
 (defn inc-sent-cases-count [org-id]
   (inc-count :sent-cases org-id))
