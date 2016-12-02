@@ -31,15 +31,19 @@
 
 ;; BTW - by default, http-kit keeps idle connections for 120s
 
+(def ^:private url (str method "://" host ":" port path))
+
 (defn- transmit-raw [data]
-  @(http/post (str method "://" host ":" port path)
+  @(http/post url
               {:body (json/generate-string data)
                :timeout timeout
                :headers {"Content-Type" "application/json"
                          "Accept" "application/json"}}))
 
 (defn- transmit [data thread-id]
-  (info "Transmitting sample case " (:case data) "for org" (:org data) " in thread" thread-id data)
+  ;; Turn off logging after first 1000 cases to improve performance
+  (when (< (:case data) 1000)
+    (info "Transmitting sample case " (:case data) "for org" (:org data) " in thread" thread-id data))
   (let [response (transmit-raw data)
         error (:error response)
         prediction (when-not error

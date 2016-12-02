@@ -7,9 +7,10 @@
 
 (defn sleep-time-and-cases-to-gen [org-id]
   (let [target-rate(store/target-rate org-id)]
-    (if (zero? target-rate)
-      [100 0]
-      [(/ 1000 target-rate) 1])))
+    (cond
+      (zero? target-rate) [100 0]
+      (<= target-rate 100) [(/ 1000 target-rate) 1]
+      :else [1000 target-rate])))
 
 (defn- start [quit-atom]
   (doseq [org-id (store/org-ids)]
@@ -19,11 +20,18 @@
           (when-not @quit-atom
             (let [data (fn [n] {:org org-id :text "foo" :case n :prediction_type "sentiment"})
                   [sleep-time cases-to-gen] (sleep-time-and-cases-to-gen org-id)
+                  start-time (System/currentTimeMillis)
                   all-sent? (->> cases-to-gen
                                  (+ i)
                                  (range i)
                                  (map #(>!! generated-cases-chan (data %)))
-                                 (every? true?))]
+                                 (every? true?))
+                  generation-time (- (System/currentTimeMillis) start-time)
+                  sleep-time (- sleep-time generation-time)
+                  sleep-time (if (neg? sleep-time)
+                               0 ; generation of cases took more than time allotted
+                               sleep-time)
+                  ]
               (when (not (zero? cases-to-gen))
                 (debug "Generated" cases-to-gen "sample case(s) for org " org-id ", will sleep for" sleep-time "ms"))
               (when all-sent?

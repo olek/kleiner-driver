@@ -1,18 +1,21 @@
 (ns driver.store
-  (:require [clojure.tools.logging :refer [info]]
+  (:require [amalloy.ring-buffer :refer [ring-buffer]]
+            [clojure.core.async :refer [thread]]
+            [clojure.tools.logging :refer [info]]
             [mount.core :refer [defstate]]))
 
 (def ^:private window-size 3) ; secs
-(def ^:private max-target-rate 10000)
+(def ^:private max-target-rate 100000)
+(def ^:private timeseries-buffer (ring-buffer (* window-size max-target-rate)))
 
 (def ^:private org-defaults
-  {:sent-cases {:timeseries (list)
+  {:sent-cases {:timeseries timeseries-buffer
                 :count 0}
-   :predictions {:timeseries (list)
+   :predictions {:timeseries timeseries-buffer
                  :count 0}
-   :errors {:timeseries (list)
+   :errors {:timeseries timeseries-buffer
             :count 0}
-   :timeouts {:timeseries (list)
+   :timeouts {:timeseries timeseries-buffer
               :count 0}
    :target-rate 0}) ; target-rate is cases per second to generate
 
@@ -30,23 +33,16 @@
 (defn- average [key-name org-id]
   (let [curr-time (quot (System/currentTimeMillis) 1000)
         window-end (- curr-time window-size)]
-    (swap! store
-           update-in
-           [org-id key-name :timeseries]
-           (comp doall
-                 (partial drop-while (partial > window-end))))
     (-> (get-in @store [org-id key-name :timeseries])
+        reverse
+        (->> (drop-while (partial > window-end)))
         count
         (/ window-size))))
 
 (defn- update-timeseries [timeseries]
   (let [curr-time (quot (System/currentTimeMillis) 1000)
         window-end (- curr-time window-size)]
-    (->> curr-time
-         list
-         (concat timeseries)
-         (drop-while (partial > window-end))
-         doall)))
+    (cons curr-time timeseries)))
 
 (defn- inc-count [key-name org-id]
   (assert-org-id org-id)

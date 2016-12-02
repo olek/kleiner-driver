@@ -13,14 +13,15 @@
                  [cheshire "5.6.3"]
                  [compojure "1.5.1"]
                  [org.clojure/core.async "0.2.395"]
-                 [environ "1.1.0"]]
+                 [environ "1.1.0"]
+                 [amalloy/ring-buffer "1.2.1"]]
 
   :plugins [[lein-environ "1.0.1"]
             [lein-var-file "0.3.1"]]
 
   :source-paths ["src/clj"]
   :java-source-paths ["src/java"]
-  :jvm-opts ["-Duser.timezone=UTC"]
+  :jvm-opts ["-Xmx1g" "-server" "-Duser.timezone=UTC"]
              ;"-Djavax.net.debug=ssl" ;good to enable when debugging ssl issues
   :repl-options {:timeout 60000}
 

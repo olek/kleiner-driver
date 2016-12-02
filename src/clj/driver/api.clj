@@ -12,7 +12,7 @@
 
 (defroutes routes
   (POST "/prediction-stub" []
-    (Thread/sleep 100); prediction analysis is supposed to take around 100ms
+    ;;(Thread/sleep 100); prediction analysis is supposed to take around 100ms
     (json/generate-string {:score 42}))
   (GET "/stats" [] (json/generate-string (store/stats)))
   (POST "/set-target-rate" [rate :<< as-int org :<< as-int]
@@ -37,7 +37,8 @@
   :start
   (when @http-server-enabled?
     (info "Starting kleiner-driver api" {:port 8080})
-    (run-server app {:port 8080}))
+    (run-server app {:port 8080
+                     :thread 15})) ;; increased from default 4 to help with prediction-stub
   :stop
   (when @http-server-enabled?
     (server :timeout 100)))

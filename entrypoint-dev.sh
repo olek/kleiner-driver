@@ -12,5 +12,7 @@ ENV_VARS=$(cat .env-vars | sed 's/^/-D/')
 exec java \
   ${ENV_VARS} \
   -XX:-OmitStackTraceInFastThrow \
+  -Xmx1g \
+  -server \
   -jar target/kleiner-driver-0.1.0-standalone.jar \
   "$@"
