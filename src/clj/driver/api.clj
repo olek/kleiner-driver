@@ -18,6 +18,9 @@
   (POST "/set-target-rate" [rate :<< as-int org :<< as-int]
     (store/set-target-rate rate org)
     {:status 204})
+  (POST "/set-target-rate-percentage" [rate :<< as-int org :<< as-int]
+    (store/set-target-rate-percentage rate org)
+    {:status 204})
   (POST "/pulse" [duration :<< as-int rate :<< as-int]
     (store/pulse duration rate)
     {:status 204})

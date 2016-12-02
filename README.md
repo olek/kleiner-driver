@@ -73,4 +73,9 @@ $ curl -v 'http://olek.desk.local:8080/set-target-rate' -d org=1 -d rate=0
 < HTTP/1.1 204 No Content
 ...
 
+$ curl -v 'http://olek.desk.local:8080/set-target-rate-percentage' -d org=1 -d rate=0
+...
+< HTTP/1.1 204 No Content
+...
+
 ```

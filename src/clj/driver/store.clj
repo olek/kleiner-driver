@@ -6,6 +6,7 @@
 
 (def ^:private window-size 3) ; secs
 (def ^:private max-target-rate 100000)
+(def ^:private hundred-percent-target-rate 1000)
 (def ^:private timeseries-buffer (ring-buffer (* window-size max-target-rate)))
 
 (def ^:private org-defaults
@@ -90,6 +91,16 @@
          update-in
          [org-id :target-rate]
          (constantly rate)))
+
+(defn set-target-rate-percentage [rate org-id]
+  (assert-org-id org-id)
+  (assert (not (neg? rate)))
+  (assert (<= rate 100))
+  (swap! store
+         update-in
+         [org-id :target-rate]
+         (constantly (int (* (/ rate 100)
+                             hundred-percent-target-rate)))))
 
 (defn org-ids []
   (keys @store))
