@@ -5,7 +5,7 @@
 
 (defstate channels
   :start
-  {:generated-cases (chan (dropping-buffer 100000))
+  {:generated-cases (chan (dropping-buffer 10000))
    :stats (chan)}
   :stop
   (doseq [ch (vals channels)]

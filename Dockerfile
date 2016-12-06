@@ -56,8 +56,9 @@ COPY . /app
 
 WORKDIR /app
 
+RUN lein deps
 RUN lein uberjar
 
-ENTRYPOINT ["./entrypoint.sh"]
+ENTRYPOINT ["./scripts/entrypoint.sh"]
 
 #CMD ["-c", "/", "-p", "8080"]
