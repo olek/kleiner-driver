@@ -10,7 +10,7 @@ phases:
       - echo Environment dump
       - env
       - echo Build started on `date`
-      - ./codebuild.sh
+      - /bin/bash ./codebuild.sh
   post_build:
     commands:
       - echo Build completed on `date`
