@@ -91,8 +91,9 @@ docker run \
      -e SCALER_HOST=scaler \
      -e CONSUL_HOST=$DOCKERHOST_IP \
      -e OVERRIDE_MODEL_API_HOST=sentiment \
+     -e WORKER_THREADS=1000 \
      kleiner_router \
-     java -XX:+UseG1GC -XX:+UseCompressedOops -Xmx250m -jar /app/build/libs/kleiner-router-1.0-SNAPSHOT-all.jar
+     java -XX:+UseG1GC -XX:+UseCompressedOops -Xmx1g -jar /app/build/libs/kleiner-router-1.0-SNAPSHOT-all.jar
 
 sleep 1
 

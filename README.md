@@ -1,7 +1,7 @@
 # kleiner-driver
 Backend to generate fake cases and send them to router, along with API to control it.
 
-## Useage
+## Usage
 
 Run it with lein
 
@@ -90,3 +90,34 @@ $ curl -v 'http://localhost:8080/set-target-rate-percentage' -d org=1 -d rate=0
 ...
 
 ```
+
+## Driving the entire system locally
+
+Check out all Kleiner repos (including kleiner-driver) under some directory.
+
+If you are using docker for mac increase the memory from the default 2GB to, say, 5GB.
+
+    cd kleiner-driver/
+    ./scripts/kleiner-bootstrap.sh
+
+This will pull the latest for each repo, then build the docker images and run them.
+
+You can now run the UI or hit the driver directly via the api. Check that everything is fine by hitting stats:
+
+    curl -s 'http://localhost:8080/stats'
+
+Warm up the JVMs by running
+
+    curl -v 'http://localhost:8080/pulse' -d rate=100 -d duration=20
+
+Check the stats again (see above) and then reset the stats
+
+    curl -v 'http://localhost:8080/reset' -X POST
+
+You are now ready to drive the system. If you are trying to benchmark you can try
+
+    curl -v 'http://localhost:8080/pulse' -d rate=1000 -d duration=20
+
+and hit the stats endpoint throughout the run. You want to see an actual rate of around 1000 cases per minute.
+
+Also make sure you are seeing a total of rate*duration predictions at the end of the run.
