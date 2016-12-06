@@ -1,0 +1,18 @@
+version: 0.1
+
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - $(aws ecr get-login --region us-west-2)
+  build:
+    commands:
+      - echo Environment dump
+      - env
+      - echo Build started on `date`
+      - ./codebuild.sh
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing the Docker image to latest...
+      - docker push $ECR_REPOSITORY_PATH/$ECR_IMAGE_NAME:latest
