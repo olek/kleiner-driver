@@ -10,6 +10,12 @@
             [org.httpkit.server :refer [run-server]]
             [ring.middleware.params :refer [wrap-params]]))
 
+(def ^:private port (Integer. (or (:api-port env)
+                                  (:nomad-port-http env)
+                                  "8080")))
+(def ^:private threadpool-size (Integer. (or (:api-threadpool-size env)
+                                             "15")))
+
 (defroutes routes
   (POST "/prediction-stub" []
     ;;(Thread/sleep 100); prediction analysis is supposed to take around 100ms
@@ -40,9 +46,9 @@
 (defstate ^:private server
   :start
   (when @http-server-enabled?
-    (info "Starting kleiner-driver api" {:port 8080})
-    (run-server app {:port 8080
-                     :thread 15})) ;; increased from default 4 to help with prediction-stub
+    (info "Starting kleiner-driver api" {:port port})
+    (run-server app {:port port
+                     :thread threadpool-size})) ;; increased from default 4 to help with prediction-stub
   :stop
   (when @http-server-enabled?
     (server :timeout 100)))

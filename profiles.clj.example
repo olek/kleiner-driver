@@ -2,6 +2,8 @@
        :source-paths ["dev"]
        :repl-options {:init-ns user}
        :env {:threadpool-size "10"
+             :api-threadpool-size "15"
+             :api-port "8080"
              :target-http-method "http"
              :target-host "localhost"
              :target-port "8080"
