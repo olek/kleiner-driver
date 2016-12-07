@@ -27,7 +27,8 @@ job "driver" {
 
       service {
         name = "driver"
-        tags = ["urlprefix-driver.service.consul:9999/"]
+        tags = ["urlprefix-driver.kleiner.ml/",
+                "urlprefix-driver.service.consul:9999/"]
         port = "http"
 
         check {
