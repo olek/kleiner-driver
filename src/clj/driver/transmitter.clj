@@ -43,7 +43,7 @@
 (defn- transmit [data thread-id]
   ;; Turn off logging after first 10000 cases to improve performance
   (when (< (:case data) 10000)
-    (info "Transmitting sample case " (:case data) "for org" (:org data) " in thread" thread-id data))
+    (info "Transmitting sample case" (:case data) "for org" (:org data) "in thread" thread-id data))
   (let [response (transmit-raw data)
         error (:error response)
         prediction (when-not error

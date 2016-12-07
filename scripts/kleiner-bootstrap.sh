@@ -7,21 +7,19 @@ export DOCKERHOST_IP
 
 echo ================================================================================
 echo 'Stopping all containers'
-docker stop $(docker ps -a -q) faa
+docker stop $(docker ps -q)
 
 echo ================================================================================
 echo 'Removing all containers'
-docker rm $(docker ps -a -q) faa
+docker rm $(docker ps -a -q)
 
 docker ps -a -q
 
 # exit 0
 
-cd ..
-
 echo ================================================================================
 echo 'Building Router'
-cd kleiner-router
+cd ../kleiner-router
 git pull
 docker build --rm -t kleiner_router .
 
@@ -50,6 +48,8 @@ git pull
 docker build --rm -t kleiner_ui .
 
 docker pull progrium/consul
+
+cd ..
 
 echo ================================================================================
 echo 'Starting consul'
@@ -94,6 +94,7 @@ docker run \
      -e WORKER_THREADS=1000 \
      kleiner_router \
      java -server -Xmx1g -Xms1g -XX:+UseConcMarkSweepGC -XX:+CMSParallelRemarkEnabled -XX:+ScavengeBeforeFullGC -XX:+CMSScavengeBeforeRemark -jar /app/build/libs/kleiner-router-1.0-SNAPSHOT-all.jar
+
 sleep 1
 
 echo ================================================================================
