@@ -93,8 +93,7 @@ docker run \
      -e OVERRIDE_MODEL_API_HOST=sentiment \
      -e WORKER_THREADS=1000 \
      kleiner_router \
-     java -XX:+UseG1GC -XX:+UseCompressedOops -Xmx1g -jar /app/build/libs/kleiner-router-1.0-SNAPSHOT-all.jar
-
+     java -server -Xmx1g -Xms1g -XX:+UseConcMarkSweepGC -XX:+CMSParallelRemarkEnabled -XX:+ScavengeBeforeFullGC -XX:+CMSScavengeBeforeRemark -jar /app/build/libs/kleiner-router-1.0-SNAPSHOT-all.jar
 sleep 1
 
 echo ================================================================================
