@@ -16,13 +16,6 @@ job "driver" {
       config {
         image = "483510943701.dkr.ecr.us-west-2.amazonaws.com/kleiner/driver:latest"
         network_mode = "host"
-        command = "java"
-        args = [
-          "-XX:-OmitStackTraceInFastThrow",
-          "-XX:+UseG1GC",
-          "Xmx1g",
-          "-jar", "/app/target/kleiner-driver-0.1.0-standalone.jar"
-        ]
       }
 
       service {
