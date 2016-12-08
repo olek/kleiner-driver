@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "Starting kleiner-driver"
+echo "Starting kleiner-driver JVM"
 
 # NOTE Current version of env-vars has bug where property values with space will generate bad
 # property file; avoid spaces for now

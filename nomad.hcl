@@ -26,7 +26,7 @@ job "driver" {
 
         check {
           type     = "http"
-          path     = "/stats"
+          path     = "/health"
           interval = "10s"
           timeout  = "2s"
         }

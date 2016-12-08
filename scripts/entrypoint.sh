@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "Starting kleiner-driver"
+echo "Starting kleiner-driver JVM"
 
 exec java \
   -XX:-OmitStackTraceInFastThrow \

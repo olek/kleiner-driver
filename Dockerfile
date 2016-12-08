@@ -60,5 +60,3 @@ RUN lein deps
 RUN lein uberjar
 
 ENTRYPOINT ["./scripts/entrypoint.sh"]
-
-#CMD ["-c", "/", "-p", "8080"]

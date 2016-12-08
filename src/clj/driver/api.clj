@@ -4,6 +4,7 @@
             [compojure.core :refer [defroutes GET POST]]
             [compojure.coercions :refer [as-int]]
             [compojure.route :as route]
+            [clojure.string :as s]
             [driver.store :as store]
             [environ.core :refer [env]]
             [mount.core :refer [defstate]]
@@ -21,6 +22,7 @@
     ;;(Thread/sleep 100); prediction analysis is supposed to take around 100ms
     (json/generate-string {:score 42}))
   (GET "/stats" [] (json/generate-string (store/stats)))
+  (GET "/health" [] (json/generate-string {:healthy (not (nil? (store/recent-responses)))}))
   (GET "/recent" [] (json/generate-string (store/recent-responses)))
   (POST "/set-target-rate" [rate :<< as-int org :<< as-int]
     (store/set-target-rate rate org)
@@ -36,7 +38,34 @@
     {:status 204})
   (route/not-found (json/generate-string {:error "Not Found"})))
 
-(def app (wrap-params routes))
+
+;; Request logging
+(defn- log-request [req resp resp-time]
+  (info (format "Responded to %s \"%s\" with %s in %sms"
+                (-> req :request-method name s/upper-case)
+                (cond-> (:uri req)
+                  (seq (:query-string req)) (str "?" (:query-string req)))
+                (:status resp)
+                resp-time)))
+
+(defn- silence-request? [{:keys [uri request-method]}]
+  (and (= request-method :get)
+       (= uri "/health")))
+
+(defn wrap-log-request [handler]
+  (fn [req]
+    (if (silence-request? req)
+      (handler req)
+      (do
+        (let [start (System/currentTimeMillis)
+              response (handler req)
+              resp-time (- (System/currentTimeMillis) start)]
+          (log-request req response resp-time)
+          response)))))
+
+(def app (-> routes
+             wrap-params
+             wrap-log-request))
 
 (def ^:private http-server-enabled? (atom false))
 
