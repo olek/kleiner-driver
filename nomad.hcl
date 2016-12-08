@@ -33,6 +33,7 @@ job "driver" {
       }
 
       env {
+        DRIVER_THREADPOOL_SIZE = "1000"
         TARGET_HOST = "router.service.consul"
         TARGET_PORT = "9999"
       }

@@ -20,10 +20,10 @@
 (def ^:private path (or (:target-path env)
                         "/prediction-stub"))
 
-(def ^:private threadpool-size (Integer. (or (:threadpool-size env)
+(def ^:private threadpool-size (Integer. (or (:driver-threadpool-size env)
                                              "10")))
 
-(info "Environment" {:threadpool-size threadpool-size
+(info "Environment" {:driver-threadpool-size threadpool-size
                      :target-http-method method
                      :target-host host
                      :target-port port
