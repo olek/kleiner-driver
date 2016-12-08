@@ -4,7 +4,7 @@
             [clojure.tools.logging :refer [info]]
             [mount.core :refer [defstate]]))
 
-(def ^:private window-size 3) ; secs
+(def ^:private window-size 1) ; seconds
 (def ^:private max-target-rate 100000)
 (def ^:private hundred-percent-target-rate 1000)
 (def ^:private timeseries-buffer (ring-buffer (* window-size max-target-rate)))
@@ -34,17 +34,15 @@
           (str "Org " org-id " is not in the store.")))
 
 (defn- average [key-name org-id]
-  (let [curr-time (quot (System/currentTimeMillis) 1000)
-        window-end (- curr-time window-size)]
+  (let [curr-time (System/currentTimeMillis)
+        window-start (- curr-time (* window-size 1000))]
     (-> (get-in @store [org-id key-name :timeseries])
-        (->> (drop-while (partial > window-end)))
+        (->> (drop-while (partial > window-start)))
         count
         (/ window-size))))
 
 (defn- update-timeseries [timeseries]
-  (let [curr-time (quot (System/currentTimeMillis) 1000)
-        window-end (- curr-time window-size)]
-    (conj timeseries curr-time)))
+  (conj timeseries (System/currentTimeMillis)))
 
 (defn- inc-count [key-name org-id]
   (assert-org-id org-id)
