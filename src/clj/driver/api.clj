@@ -49,8 +49,8 @@
                 resp-time)))
 
 (defn- silence-request? [{:keys [uri request-method]}]
-  (and (= request-method :get)
-       (= uri "/health")))
+  (or (= uri "/health")
+      (= uri "/prediction-stub")))
 
 (defn wrap-log-request [handler]
   (fn [req]

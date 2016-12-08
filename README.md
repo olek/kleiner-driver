@@ -29,6 +29,8 @@ Run it with docker
 ## Environment Variables
 | ENV Variable            | Description                                      | Default Value    |
 |-------------------------|--------------------------------------------------|------------------|
+| API_PORT                | Port for driver's API server                     | 8080             |
+| API_THREADPOOL_SIZE     | Thread pool size for API server http 'workers'   | 15               |
 | THREADPOOL_SIZE         | Thread pool size for 'workers' that pull target  | 10               |
 | TARGET_HTTP_METHOD      | Currently 'http' is the only value supported     | http             |
 | TARGET_HOST             | Host for target endpoint                         | localhost        |
@@ -52,6 +54,7 @@ $ curl -s 'http://localhost:8080/stats' | underscore print
   "1": {
     "sent-cases": { "rate": 3.7, "count": 43 },
     "predictions": { "rate": 3.6, "count": 42 },
+    "skips": { "rate": 0, "count": 0 },
     "errors": { "rate": 0, "count": 0 },
     "timeouts": { "rate": 0, "count": 0 },
     "target-rate": 10

@@ -16,6 +16,8 @@
    :predictions {:timeseries timeseries-buffer
                  :recent recent-buffer
                  :count 0}
+   :skips {:timeseries timeseries-buffer
+           :count 0}
    :errors {:timeseries timeseries-buffer
             :count 0}
    :timeouts {:timeseries timeseries-buffer
@@ -65,7 +67,7 @@
                                              :timeseries
                                              :recent))
                                 org-data
-                                [:sent-cases :predictions :errors :timeouts])
+                                [:sent-cases :predictions :skips :errors :timeouts])
                         [:target-rate-percentage (-> (get-in @store [org-id :target-rate])
                                                      (/ hundred-percent-target-rate)
                                                      (* 100))])])))
@@ -80,6 +82,9 @@
          [org-id :predictions :recent]
          conj
          [case-data prediction]))
+
+(defn inc-skips-count [org-id]
+  (inc-count :skips org-id))
 
 (defn inc-errors-count [org-id]
   (inc-count :errors org-id))

@@ -1,6 +1,6 @@
 (ns driver.generator
   (:require [clojure.tools.logging :refer [info warn]]
-            [clojure.core.async :refer [thread offer!]]
+            [clojure.core.async :refer [thread offer! >!!]]
             [driver.channels :refer [channels]]
             [driver.store :as store]
             [mount.core :refer [defstate]]))
@@ -11,14 +11,18 @@
       (loop [i 0]
         (when-not @quit-atom
           (let [generated-cases-chan (:generated-cases channels)
+                stats-chan (:stats channels)
                 gen-data (fn [n] {:org org-id :text "foo" :case n :prediction_type "sentiment"})
                 batch-size (store/target-rate org-id)
                 start-time (System/currentTimeMillis)
-                all-sent? (->> batch-size
-                               (+ i)
-                               (range i)
-                               (map #(offer! generated-cases-chan (gen-data %)))
-                               (every? true?))
+                gen-res (->> batch-size
+                             (+ i)
+                             (range i)
+                             (map #(offer! generated-cases-chan (gen-data %))))
+                _ (doseq [res gen-res]
+                  (when-not res
+                    (>!! stats-chan [:finish {:org org-id} :skip])))
+                all-sent? (every? true? gen-res)
                 generation-time (- (System/currentTimeMillis) start-time)
                 sleep-time (max 0
                                 (- 1000 generation-time))]

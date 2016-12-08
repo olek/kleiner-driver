@@ -12,6 +12,7 @@
 
     :finish
     (case prediction
+      :skip (store/inc-skips-count org-id)
       :error (store/inc-errors-count org-id)
       :timeout (store/inc-timeouts-count org-id)
       (store/inc-predictions-count case-data prediction))))
