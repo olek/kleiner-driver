@@ -1,7 +1,7 @@
 (ns driver.transmitter
   (:require [cheshire.core :as json]
             [clojure.core.async :refer [<!! >!! thread]]
-            [clojure.tools.logging :refer [info]]
+            [clojure.tools.logging :refer [info warn]]
             [driver.channels :refer [channels]]
             [environ.core :refer [env]]
             [mount.core :refer [defstate]]
@@ -56,7 +56,10 @@
         prediction (cond
                      (and (nil? error) (number? prediction)) prediction
                      (instance? TimeoutException error) :timeout
-                     :else :error)]
+                     :else :error)
+        _ (when (= prediction :error)
+            (warn "Received error:" (or error
+                                        response)))]
     [data prediction]))
 
 (defn- transmit-start-event [data ch]

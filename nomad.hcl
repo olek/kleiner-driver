@@ -40,7 +40,7 @@ job "driver" {
 
       resources {
         cpu    = 1000 # MHz
-        memory = 2048 # MB
+        memory = 1024 # MB
 
         network {
           mbits = 10
