@@ -7,6 +7,11 @@ job "driver" {
     max_parallel = 1
   }
 
+  constraint {
+    attribute = "${node.class}"
+    value     = "core"
+  }
+
   group "driver" {
     count = 1
 
