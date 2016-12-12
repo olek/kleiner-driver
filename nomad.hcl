@@ -48,7 +48,7 @@ job "driver" {
         memory = 1024 # MB
 
         network {
-          mbits = 10
+          mbits = 100
           port "http" {}
         }
       }
