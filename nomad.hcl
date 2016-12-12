@@ -38,7 +38,7 @@ job "driver" {
       }
 
       env {
-        DRIVER_THREADPOOL_SIZE = "300"
+        DRIVER_THREADPOOL_SIZE = "1000"
         TARGET_HOST = "router.private.us-west-2.kleiner.ml"
         TARGET_PORT = "80"
       }
