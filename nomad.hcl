@@ -39,8 +39,8 @@ job "driver" {
 
       env {
         DRIVER_THREADPOOL_SIZE = "300"
-        TARGET_HOST = "router.service.consul"
-        TARGET_PORT = "9999"
+        TARGET_HOST = "router.private.us-west-2.kleiner.ml"
+        TARGET_PORT = "80"
       }
 
       resources {
