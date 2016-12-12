@@ -37,6 +37,7 @@
   @(http/post url
               {:body (json/generate-string data)
                :timeout timeout
+               :keepalive 1000 ; lets try to close connection quickly when not used
                :headers {"Content-Type" "application/json"
                          "Accept" "application/json"}}))
 
