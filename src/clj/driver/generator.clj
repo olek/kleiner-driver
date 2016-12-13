@@ -43,9 +43,7 @@
                 all-sent? (every? true? gen-res)
                 generation-time (- (System/nanoTime) start-time)
                 sleep-msg (str "sleeping for " (ns->ms (adjusted-sleep-time)) "ms")
-                _ (if all-sent?
-                    (when (not (zero? batch-size))
-                      (info "Generated" batch-size "sample case(s) for org" org-id "and" sleep-msg))
+                _ (when-not all-sent?
                     (warn "Dropped some of" batch-size "sample cases for org" org-id "and" sleep-msg))
                 sleep-time-precise (adjusted-sleep-time)
                 sleep-start-time (System/nanoTime)
