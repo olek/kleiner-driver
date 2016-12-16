@@ -3,15 +3,20 @@
             [clojure.core.async :refer [thread offer! >!!]]
             [driver.channels :refer [channels]]
             [driver.store :as store]
+            [environ.core :refer [env]]
             [mount.core :refer [defstate]]))
 
 (def ^:private second-in-nanoseconds (* 1 1000 1000 1000))
+(def ^:private smooth-operator? (= "true" (or (:smooth-operator env)
+                                    "false")))
+
+(def config {:smooth-operator smooth-operator?})
 
 (defn- sleep-time-and-cases-to-gen [org-id]
-  (let [target-rate(store/target-rate org-id)]
+  (let [target-rate (store/target-rate org-id)]
     (cond
       (zero? target-rate) [second-in-nanoseconds 0]
-      ;;:else [(/ second-in-nanoseconds target-rate) 1])))
+      smooth-operator? [(/ second-in-nanoseconds target-rate) 1]
       :else [second-in-nanoseconds target-rate])))
 
 (defn- ns->ms [t]

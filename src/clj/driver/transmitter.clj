@@ -35,8 +35,6 @@
              :target-port port
              :target-path path})
 
-(info "Environment" config)
-
 ;; BTW - by default, http-kit keeps idle connections for 120s
 
 (def ^:private url (str method "://" host ":" port path))

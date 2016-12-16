@@ -7,6 +7,8 @@
             [clojure.string :as s]
             [driver.store :as store]
             [driver.transmitter :as transmitter]
+            [driver.generator :as generator]
+            [driver.channels :as channels]
             [environ.core :refer [env]]
             [mount.core :refer [defstate]]
             [org.httpkit.server :refer [run-server]]
@@ -18,6 +20,17 @@
 (def ^:private threadpool-size (Integer. (or (:api-threadpool-size env)
                                              "15")))
 
+(def ^:private config {:port port
+                       :api-threadpool-size threadpool-size})
+
+(def ^:private total-config
+  (merge config
+         transmitter/config
+         generator/config
+         channels/config))
+
+(info "Environment" total-config)
+
 (defroutes routes
   (POST "/prediction-stub" []
     (Thread/sleep 30); prediction analysis is supposed to take some time
@@ -25,9 +38,7 @@
   (GET "/stats" [] (json/generate-string (store/stats)))
   (GET "/health" [] (json/generate-string {:healthy (not (nil? (store/recent-responses)))}))
   (GET "/recent" [] (json/generate-string (store/recent-responses)))
-  (GET "/config" [] (json/generate-string (merge transmitter/config
-                                                 {:api-port (:api-port env)
-                                                  :api-threadpool-size (:api-threadpool-size env)})))
+  (GET "/config" [] (json/generate-string total-config))
   (POST "/set-target-rate" [rate :<< as-int org :<< as-int]
     (store/set-target-rate rate org)
     {:status 204})
