@@ -1,6 +1,6 @@
 (ns driver.transmitter
   (:require [cheshire.core :as json]
-            [clojure.core.async :refer [<!! >!! thread]]
+            [clojure.core.async :refer [>! put! thread go poll!]]
             [clojure.tools.logging :refer [info warn]]
             [driver.channels :refer [channels]]
             [environ.core :refer [env]]
@@ -9,8 +9,14 @@
   (:import com.fasterxml.jackson.core.JsonParseException
            org.httpkit.client.TimeoutException))
 
-(def ^:private timeout 3000) ; in ms
+(def ^:private socket-timeout 3000) ; in ms
 
+(def ^:private wait-for-pending-reduction 1) ; in ms
+(def ^:private wait-for-slow-harvesting 1000) ; in ms
+(def ^:private max-transmissions-to-log 10000) ; in ms
+
+(def ^:private max-target-connections (Integer. (or (:max-target-connections env)
+                                                    "1000"))) ; in ms
 (def ^:private method (or (:target-http-method env)
                           "http"))
 (def ^:private host (or (:target-host env)
@@ -33,59 +39,86 @@
 
 (def ^:private url (str method "://" host ":" port path))
 
+(def ^:private pending (atom []))
+
 (defn- transmit-raw [data]
-  @(http/post url
+  (http/post url
               {:body (json/generate-string data)
-               :timeout timeout
+               :timeout socket-timeout
                :keepalive 1000 ; lets try to close connection quickly when not used
                :headers {"Content-Type" "application/json"
                          "Accept" "application/json"}}))
 
-(defn- transmit [data thread-id]
-  ;; Turn off logging after first 10000 cases to improve performance
-  (when (< (:case data) 10000)
-    (info "Transmitting sample case" (:case data) "for org" (:org data) "in thread" thread-id data))
-  (let [response (transmit-raw data)
-        error (:error response)
-        prediction (when-not error
-                     (try
-                       (-> response
-                           :body
-                           json/parse-string
-                           (get "score"))
-                       (catch JsonParseException e nil)))
-        prediction (cond
-                     (and (nil? error) (number? prediction)) prediction
-                     (instance? TimeoutException error) :timeout
-                     :else :error)
-        _ (when (= prediction :error)
-            (warn "Received error:" (or error
-                                        response)))]
-    [data prediction]))
+(defn- transmit [generated-cases-chan stats-chan]
+  (when-let [data (poll! generated-cases-chan)]
+    ;; Turn off logging after first 10000 cases to improve performance
+    (when (< (:case data) max-transmissions-to-log)
+      (info "Transmitting sample case" (:case data) "for org" (:org data) data))
+    (put! stats-chan [:start data])
+    [data (transmit-raw data)]))
 
-(defn- transmit-start-event [data ch]
-  (>!! ch [:start data])
-  data)
 
-(defn- transmit-finish-event [[case-data prediction] ch]
-  (>!! ch [:finish case-data prediction])
-  prediction)
+(defn- parse-and-report [data response ch]
+  (go (let [error (:error response)
+            prediction (when-not error
+                         (try
+                           (-> response
+                               :body
+                               json/parse-string
+                               (get "score"))
+                           (catch JsonParseException e nil)))
+            prediction (cond
+                         (and (nil? error) (number? prediction)) prediction
+                         (instance? TimeoutException error) :timeout
+                         :else :error)
+            _ (when (= prediction :error)
+                (warn "Received error:" (or error
+                                            response)))]
+
+        (>! ch [:finish data prediction]))))
+
+(defn- harvest-pending [stats-chan]
+  (locking pending
+    (let [{done true not-done false} (group-by (comp realized? second) @pending)]
+      (reset! pending not-done)
+      ;(when (seq done)
+      ;  (go (info "Harvested" (count done) "http results, left" (count not-done) "for later")))
+      (doseq [[data prom] done]
+        (parse-and-report data @prom stats-chan))
+      (seq done))))
+
+(defn- add-to-pending [stats-chan producer-fn]
+  (letfn [(attempt []
+            (when (<= (count @pending) max-target-connections)
+              (when-let [res (producer-fn stats-chan)]
+                (swap! pending conj res)))
+            )]
+    (locking pending
+      (or (attempt)
+          (and
+            (harvest-pending stats-chan)
+            (attempt))))))
 
 (defstate ^:private transmitter
   :start
   (let [generated-cases-chan (:generated-cases channels)
         stats-chan (:stats channels)
         quit-atom (atom false)]
-    (doseq [n (range threadpool-size)]
-      (thread
+
+    ;; Collects results of http calls when traffic is low
+    (thread
+      (loop []
+        (when-not @quit-atom
+          (harvest-pending stats-chan)
+          (Thread/sleep wait-for-slow-harvesting)
+          (recur))))
+
+    (thread
         (loop []
           (when-not @quit-atom
-            (when-let [case-data (<!! generated-cases-chan)]
-              (-> case-data
-                  (transmit-start-event stats-chan)
-                  (transmit n)
-                  (transmit-finish-event stats-chan))
-              (recur))))))
+            (when-not (add-to-pending stats-chan (partial transmit generated-cases-chan))
+              (Thread/sleep wait-for-pending-reduction))
+            (recur))))
     quit-atom)
   :stop
   (reset! transmitter true))

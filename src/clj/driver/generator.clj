@@ -10,8 +10,9 @@
 (defn- sleep-time-and-cases-to-gen [org-id]
   (let [target-rate(store/target-rate org-id)]
     (cond
-      (zero? target-rate) [(/ second-in-nanoseconds 10) 0]
+      (zero? target-rate) [second-in-nanoseconds 0]
       :else [(/ second-in-nanoseconds target-rate) 1])))
+      ;;:else [second-in-nanoseconds target-rate])))
 
 (defn- ns->ms [t]
   (float (/ t 1000 1000)))
@@ -40,9 +41,11 @@
                       (>!! stats-chan [:finish {:org org-id} :skip])))
                 all-sent? (every? true? gen-res)
                 sleep-msg (str "sleeping for " (ns->ms (adjusted-sleep-time)) "ms")
+                ;;_ (info "Generated" batch-size "cases and" sleep-msg)
                 _ (when-not all-sent?
                     (warn "Dropped some of" batch-size "sample cases for org" org-id "and" sleep-msg))
-                _ (java.util.concurrent.locks.LockSupport/parkNanos (adjusted-sleep-time))]
+                sleep-time-precise (adjusted-sleep-time)
+                _ (Thread/sleep (ns->ms sleep-time-precise))]
             (recur (+ i batch-size) (+ start-time sleep-time))))))))
 
 (defstate ^:private generator

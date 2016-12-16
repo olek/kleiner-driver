@@ -32,7 +32,7 @@ Run it with docker
 | API_PORT                | Port for driver's API server                     | 8080             |
 | NOMAD_PORT_HTTP         | Same as the above                                | 8080             |
 | API_THREADPOOL_SIZE     | Thread pool size for API server http 'workers'   | 15               |
-| THREADPOOL_SIZE         | Thread pool size for 'workers' that pull target  | 10               |
+| MAX_TARGET_CONNECTIONS  | Max number of connectionsto target endpoint      | 10               |
 | TARGET_HTTP_METHOD      | Currently 'http' is the only value supported     | http             |
 | TARGET_HOST             | Host for target endpoint                         | localhost        |
 | TARGET_PORT             | Port for target endpoint                         | 8080             |

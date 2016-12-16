@@ -19,7 +19,7 @@
 
 (defroutes routes
   (POST "/prediction-stub" []
-    ;;(Thread/sleep 100); prediction analysis is supposed to take around 100ms
+    (Thread/sleep 30); prediction analysis is supposed to take some time
     (json/generate-string {:score 42}))
   (GET "/stats" [] (json/generate-string (store/stats)))
   (GET "/health" [] (json/generate-string {:healthy (not (nil? (store/recent-responses)))}))
