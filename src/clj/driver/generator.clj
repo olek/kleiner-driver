@@ -11,8 +11,8 @@
   (let [target-rate(store/target-rate org-id)]
     (cond
       (zero? target-rate) [second-in-nanoseconds 0]
-      :else [(/ second-in-nanoseconds target-rate) 1])))
-      ;;:else [second-in-nanoseconds target-rate])))
+      ;;:else [(/ second-in-nanoseconds target-rate) 1])))
+      :else [second-in-nanoseconds target-rate])))
 
 (defn- ns->ms [t]
   (float (/ t 1000 1000)))

@@ -5,7 +5,7 @@
 
 (defstate channels
   :start
-  {:generated-cases (chan 100000)
+  {:generated-cases (chan 10000)
    :stats (chan 10000)}
   :stop
   (doseq [ch (vals channels)]

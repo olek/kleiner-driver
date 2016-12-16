@@ -6,6 +6,7 @@
             [compojure.route :as route]
             [clojure.string :as s]
             [driver.store :as store]
+            [driver.transmitter :as transmitter]
             [environ.core :refer [env]]
             [mount.core :refer [defstate]]
             [org.httpkit.server :refer [run-server]]
@@ -24,6 +25,9 @@
   (GET "/stats" [] (json/generate-string (store/stats)))
   (GET "/health" [] (json/generate-string {:healthy (not (nil? (store/recent-responses)))}))
   (GET "/recent" [] (json/generate-string (store/recent-responses)))
+  (GET "/config" [] (json/generate-string (merge transmitter/config
+                                                 {:api-port (:api-port env)
+                                                  :api-threadpool-size (:api-threadpool-size env)})))
   (POST "/set-target-rate" [rate :<< as-int org :<< as-int]
     (store/set-target-rate rate org)
     {:status 204})

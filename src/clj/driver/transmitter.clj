@@ -29,11 +29,13 @@
 (def ^:private threadpool-size (Integer. (or (:driver-threadpool-size env)
                                              "10")))
 
-(info "Environment" {:driver-threadpool-size threadpool-size
-                     :target-http-method method
-                     :target-host host
-                     :target-port port
-                     :target-path path})
+(def config {:max-target-connections max-target-connections
+             :target-http-method method
+             :target-host host
+             :target-port port
+             :target-path path})
+
+(info "Environment" config)
 
 ;; BTW - by default, http-kit keeps idle connections for 120s
 

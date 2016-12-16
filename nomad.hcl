@@ -38,13 +38,13 @@ job "driver" {
       }
 
       env {
-        MAX_TARGET_CONNECTIONS = "1000"
+        MAX_TARGET_CONNECTIONS = "2000"
         TARGET_HOST = "router.private.us-west-2.kleiner.ml"
         TARGET_PORT = "80"
       }
 
       resources {
-        cpu    = 1000 # MHz
+        cpu    = 5000 # MHz
         memory = 1024 # MB
 
         network {
