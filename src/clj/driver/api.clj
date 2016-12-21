@@ -65,7 +65,9 @@
 
 (defn- silence-request? [{:keys [uri request-method]}]
   (or (= uri "/health")
-      (= uri "/prediction-stub")))
+      (= uri "/prediction-stub")
+      (= uri "/stats")
+      (= uri "/recent")))
 
 (defn wrap-log-request [handler]
   (fn [req]

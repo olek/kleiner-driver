@@ -1,57 +1,63 @@
 (ns driver.generator
   (:require [clojure.tools.logging :refer [info warn]]
-            [clojure.core.async :refer [thread offer! >!!]]
+            [clojure.core.async :refer [thread offer! put!]]
             [driver.channels :refer [channels]]
             [driver.store :as store]
             [environ.core :refer [env]]
             [mount.core :refer [defstate]]))
 
-(def ^:private second-in-nanoseconds (* 1 1000 1000 1000))
+(def ^:private second-in-milliseconds 1000)
+(def ^:private min-sleep-time 20) ; in ms, do not bother sleeping if adjusted sleep time is less than this
+(def ^:private average-oversleep 2) ; in ms, observed to be typical oversleep amount of Thread/sleep method
+(def ^:private normal-batch-size 10) ; target generating this many cases at a time
+
 (def ^:private smooth-operator? (= "true" (or (:smooth-operator env)
-                                    "false")))
+                                    "true")))
 
 (def config {:smooth-operator smooth-operator?})
 
-(defn- sleep-time-and-cases-to-gen [org-id]
-  (let [target-rate (store/target-rate org-id)]
-    (cond
-      (zero? target-rate) [second-in-nanoseconds 0]
-      smooth-operator? [(/ second-in-nanoseconds target-rate) 1]
-      :else [second-in-nanoseconds target-rate])))
-
-(defn- ns->ms [t]
-  (float (/ t 1000 1000)))
+(defn- sleep-time-and-cases-to-gen [org-id target-rate]
+  (if (or (< target-rate normal-batch-size)
+          (not smooth-operator?))
+    [second-in-milliseconds target-rate]
+    [(float (* (/ second-in-milliseconds target-rate)
+               normal-batch-size))
+     normal-batch-size]))
 
 (defn- start [quit-atom]
   (doseq [org-id (store/org-ids)]
     (thread
-      (loop [i 0 ideal-start-time nil]
+      (loop [i 0 ideal-start-time nil previous-target-rate 0]
         (when-not @quit-atom
-          (let [start-time (or ideal-start-time
-                               (System/nanoTime))
+          (let [actual-start-time (System/currentTimeMillis)
+                target-rate (store/target-rate org-id)
+                start-time (if (and ideal-start-time
+                                    (= target-rate previous-target-rate))
+                             ideal-start-time
+                             actual-start-time)
                 generated-cases-chan (:generated-cases channels)
                 stats-chan (:stats channels)
                 gen-data (fn [n] {:org org-id :text "foo" :case n :prediction_type "sentiment"})
-                [sleep-time batch-size] (sleep-time-and-cases-to-gen org-id)
-                adjusted-sleep-time (fn []
-                                      (max 0
-                                           (- sleep-time
-                                              (- (System/nanoTime) start-time))))
+                [sleep-time batch-size] (sleep-time-and-cases-to-gen org-id target-rate)
                 gen-res (->> batch-size
                              (+ i)
                              (range i)
                              (map #(offer! generated-cases-chan (gen-data %))))
                 _ (doseq [res gen-res]
                     (when-not res
-                      (>!! stats-chan [:finish {:org org-id} :skip])))
+                      (put! stats-chan [:finish {:org org-id} :skip])))
                 all-sent? (every? true? gen-res)
-                sleep-msg (str "sleeping for " (ns->ms (adjusted-sleep-time)) "ms")
-                ;;_ (info "Generated" batch-size "cases and" sleep-msg)
-                _ (when-not all-sent?
+                adjusted-sleep-time (max 0
+                                         (- sleep-time
+                                            (- (System/currentTimeMillis) start-time)
+                                            average-oversleep))
+                sleep-msg (str "sleeping for " adjusted-sleep-time "ms")
+                _ (if all-sent?
+                    (comment (info "Generated" batch-size "cases and" sleep-msg))
                     (warn "Dropped some of" batch-size "sample cases for org" org-id "and" sleep-msg))
-                sleep-time-precise (adjusted-sleep-time)
-                _ (Thread/sleep (ns->ms sleep-time-precise))]
-            (recur (+ i batch-size) (+ start-time sleep-time))))))))
+                _ (when (> adjusted-sleep-time min-sleep-time)
+                    (Thread/sleep adjusted-sleep-time))]
+            (recur (+ i batch-size) (+ start-time sleep-time) target-rate)))))))
 
 (defstate ^:private generator
   :start
