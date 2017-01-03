@@ -14,6 +14,7 @@
                  [compojure "1.5.1"]
                  [org.clojure/core.async "0.2.395"]
                  [environ "1.1.0"]
+                 [kubernetes-api "0.1.0"]
                  [amalloy/ring-buffer "1.2.1"]]
 
   :plugins [[lein-environ "1.0.1"]
