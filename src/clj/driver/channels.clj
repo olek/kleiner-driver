@@ -13,6 +13,7 @@
 (defstate channels
   :start
   {:generated-cases (chan generator-buffer-size)
+   :responses (chan 100000)
    :stats (chan 100000)}
   :stop
   (doseq [ch (vals channels)]

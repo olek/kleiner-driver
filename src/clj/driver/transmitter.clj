@@ -1,6 +1,6 @@
 (ns driver.transmitter
   (:require [cheshire.core :as json]
-            [clojure.core.async :refer [>! put! thread go poll!]]
+            [clojure.core.async :refer [<! <!! >! >!! thread go poll! offer! timeout]]
             [clojure.tools.logging :refer [info warn]]
             [driver.channels :refer [channels]]
             [environ.core :refer [env]]
@@ -41,84 +41,111 @@
 
 (def ^:private pending (atom []))
 
+(defn- >!-verbose [ch-name payload]
+  (let [ch (get channels ch-name)]
+    (when-not (offer! ch payload)
+      (info (name ch-name) "channel is full")
+      (>! ch payload))))
+
+(defn- >!!-verbose [ch-name payload]
+  (let [ch (get channels ch-name)]
+    (when-not (offer! ch payload)
+      (info (name ch-name) "channel is full")
+      (>!! ch payload))))
+
+
+(defn- transmit-raw-fake [data]
+  (let [prom (promise)]
+    (go
+      (<! (timeout 30))
+      (>!-verbose :responses [data {:body "{\"score\":42}"}])
+      (deliver prom {}))
+    prom))
+  ;(future
+  ;  (Thread/sleep 30)
+  ;  (<! (timeout 1000))
+  ;  (>!! (:responses channels) [data {:body "{\"score\":42}"}])))
+
 (defn- transmit-raw [data]
   (http/post url
-              {:body (json/generate-string data)
-               :timeout socket-timeout
-               :keepalive 1000 ; lets try to close connection quickly when not used
-               :headers {"Content-Type" "application/json"
-                         "Accept" "application/json"}}))
+             {:body (json/generate-string data)
+              :timeout socket-timeout
+              :keepalive 1000 ; lets try to close connection quickly when not used
+              :headers {"Content-Type" "application/json"
+                        "Accept" "application/json"}}
+             (fn [response]
+               (>!!-verbose :responses [data response])
+               response)))
 
-(defn- transmit [generated-cases-chan stats-chan]
-  (when-let [data (poll! generated-cases-chan)]
-    ;; Turn off logging after first 10000 cases to improve performance
-    (when (< (:case data) max-transmissions-to-log)
-      (info "Transmitting sample case" (:case data) "for org" (:org data) data))
-    (put! stats-chan [:start data])
-    [data (transmit-raw data)]))
+(defn- transmit []
+  (let [generated-cases-chan (:generated-cases channels)
+        data (poll! generated-cases-chan)]
+    (when data
+      ;; Turn off logging after first 10000 cases to improve performance
+      (when (< (:case data) max-transmissions-to-log)
+        (info "Transmitting sample case" (:case data) "for org" (:org data) data))
+      (>!!-verbose :stats [:start data])
+      [data (transmit-raw data)])))
 
 
-(defn- parse-and-report [data response ch]
-  (go (let [error (:error response)
-            prediction (when-not error
-                         (try
-                           (-> response
-                               :body
-                               json/parse-string
-                               (get "score"))
-                           (catch JsonParseException e nil)))
-            prediction (cond
-                         (and (nil? error) (number? prediction)) prediction
-                         (instance? TimeoutException error) :timeout
-                         :else :error)
-            _ (when (= prediction :error)
-                (warn "Received error:" (or error
-                                            response)))]
+(defn- parse-and-report [data response]
+  (let [error (:error response)
+        prediction (when-not error
+                     (try
+                       (-> response
+                           :body
+                           json/parse-string
+                           (get "score"))
+                       (catch JsonParseException e nil)))
+        prediction (cond
+                     (and (nil? error) (number? prediction)) prediction
+                     (instance? TimeoutException error) :timeout
+                     :else :error)
+        _ (when (= prediction :error)
+            (warn "Received error:" (or error
+                                        response)))]
 
-        (>! ch [:finish data prediction]))))
+    (>!!-verbose :stats [:finish data prediction])))
 
-(defn- harvest-pending [stats-chan]
+(defn- harvest-pending []
   (locking pending
     (let [{done true not-done false} (group-by (comp realized? second) @pending)]
       (reset! pending not-done)
       ;(when (seq done)
       ;  (go (info "Harvested" (count done) "http results, left" (count not-done) "for later")))
-      (doseq [[data prom] done]
-        (parse-and-report data @prom stats-chan))
       (seq done))))
 
-(defn- add-to-pending [stats-chan producer-fn]
+(defn- add-to-pending []
   (letfn [(attempt []
             (when (<= (count @pending) max-target-connections)
-              (when-let [res (producer-fn stats-chan)]
+              (when-let [res (transmit)]
                 (swap! pending conj res)))
             )]
     (locking pending
       (or (attempt)
           (and
-            (harvest-pending stats-chan)
+            (harvest-pending)
             (attempt))))))
 
 (defstate ^:private transmitter
   :start
   (let [generated-cases-chan (:generated-cases channels)
-        stats-chan (:stats channels)
+        responses-chan (:responses channels)
         quit-atom (atom false)]
 
-    ;; Collects results of http calls when traffic is low
     (thread
       (loop []
         (when-not @quit-atom
-          (harvest-pending stats-chan)
-          (Thread/sleep wait-for-slow-harvesting)
+          (when-not (add-to-pending)
+            (<!! (timeout wait-for-pending-reduction)))
           (recur))))
 
     (thread
-        (loop []
-          (when-not @quit-atom
-            (when-not (add-to-pending stats-chan (partial transmit generated-cases-chan))
-              (Thread/sleep wait-for-pending-reduction))
-            (recur))))
+      (loop []
+        (when-not @quit-atom
+          (when-let [[data response] (<!! responses-chan)]
+            (parse-and-report data response)
+            (recur)))))
     quit-atom)
   :stop
   (reset! transmitter true))
